@@ -1,0 +1,189 @@
+# GraphQL Schema for Collaborative MindMap
+
+type Query {
+    # Get all boards for the current user
+    myBoards: [Board!]!
+    
+    # Get a specific board by ID
+    board(id: ID!): Board
+    
+    # Get all nodes in a board
+    nodes(boardId: ID!): [Node!]!
+    
+    # Get all edges in a board
+    edges(boardId: ID!): [Edge!]!
+    
+    # Get current user info
+    me: User
+}
+
+type Mutation {
+    # Board operations
+    createBoard(input: CreateBoardInput!): Board!
+    updateBoard(id: ID!, input: UpdateBoardInput!): Board!
+    deleteBoard(id: ID!): Boolean!
+    
+    # Node operations
+    createNode(input: CreateNodeInput!): Node!
+    updateNode(id: ID!, input: UpdateNodeInput!): Node!
+    deleteNode(id: ID!): Boolean!
+    
+    # Edge operations
+    createEdge(input: CreateEdgeInput!): Edge!
+    updateEdge(id: ID!, input: UpdateEdgeInput!): Edge!
+    deleteEdge(id: ID!): Boolean!
+    
+    # Collaboration
+    shareBoard(boardId: ID!, username: String!, permission: Permission!): Board!
+}
+
+type Subscription {
+    # Subscribe to board changes
+    boardUpdated(boardId: ID!): BoardUpdate!
+    
+    # Subscribe to node changes
+    nodeChanged(boardId: ID!): NodeChange!
+    
+    # Subscribe to edge changes
+    edgeChanged(boardId: ID!): EdgeChange!
+}
+
+# Types
+
+type User {
+    id: ID!
+    username: String!
+    email: String!
+    createdAt: String!
+}
+
+type Board {
+    id: ID!
+    title: String!
+    description: String
+    owner: User!
+    collaborators: [Collaborator!]!
+    createdAt: String!
+    updatedAt: String!
+}
+
+type Collaborator {
+    user: User!
+    permission: Permission!
+}
+
+type Node {
+    id: ID!
+    boardId: ID!
+    label: String!
+    x: Float!
+    y: Float!
+    color: String
+    shape: String
+    size: Int
+    data: String
+    createdBy: User!
+    createdAt: String!
+    updatedAt: String!
+}
+
+type Edge {
+    id: ID!
+    boardId: ID!
+    source: ID!
+    target: ID!
+    label: String
+    color: String
+    lineStyle: String
+    createdBy: User!
+    createdAt: String!
+    updatedAt: String!
+}
+
+# Subscription payloads
+
+type BoardUpdate {
+    board: Board!
+    updateType: UpdateType!
+}
+
+type NodeChange {
+    node: Node
+    nodeId: ID!
+    changeType: ChangeType!
+}
+
+type EdgeChange {
+    edge: Edge
+    edgeId: ID!
+    changeType: ChangeType!
+}
+
+# Enums
+
+enum Permission {
+    READ
+    WRITE
+    ADMIN
+}
+
+enum UpdateType {
+    CREATED
+    UPDATED
+    DELETED
+}
+
+enum ChangeType {
+    CREATED
+    UPDATED
+    DELETED
+}
+
+# Input types
+
+input CreateBoardInput {
+    title: String!
+    description: String
+}
+
+input UpdateBoardInput {
+    title: String
+    description: String
+}
+
+input CreateNodeInput {
+    boardId: ID!
+    label: String!
+    x: Float!
+    y: Float!
+    color: String
+    shape: String
+    size: Int
+    data: String
+}
+
+input UpdateNodeInput {
+    label: String
+    x: Float
+    y: Float
+    color: String
+    shape: String
+    size: Int
+    data: String
+}
+
+input CreateEdgeInput {
+    boardId: ID!
+    source: ID!
+    target: ID!
+    label: String
+    color: String
+    lineStyle: String
+}
+
+input UpdateEdgeInput {
+    label: String
+    color: String
+    lineStyle: String
+}
+

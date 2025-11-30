@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Boards - Collaborative MindMap</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Collaborative MindMap</h1>
+            <nav>
+                <a th:href="@{/}">Home</a>
+                <a th:href="@{/logout}">Logout</a>
+            </nav>
+        </header>
+        
+        <main>
+            <div class="boards-header">
+                <h2>My Boards</h2>
+                <button id="createBoardBtn" class="btn btn-primary">Create New Board</button>
+            </div>
+            
+            <div id="boardsList" class="boards-grid">
+                <!-- Boards will be loaded here via GraphQL -->
+            </div>
+            
+            <!-- Create Board Modal -->
+            <div id="createBoardModal" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h3>Create New Board</h3>
+                    <form id="createBoardForm">
+                        <div class="form-group">
+                            <label for="boardTitle">Title</label>
+                            <input type="text" id="boardTitle" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="boardDescription">Description</label>
+                            <textarea id="boardDescription" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const csrfToken = /*[[${_csrf.token}]]*/ '';
+        const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
+        /*]]>*/
+    </script>
+    <script th:src="@{/js/boards.js}"></script>
+</body>
+</html>
+

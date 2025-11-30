@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collaborative MindMap - Home</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Collaborative MindMap</h1>
+            <nav>
+                <a th:href="@{/boards}">My Boards</a>
+                <a th:href="@{/logout}">Logout</a>
+            </nav>
+        </header>
+        
+        <main>
+            <div class="welcome">
+                <h2>Welcome, <span sec:authentication="name">User</span>!</h2>
+                <p>Create and collaborate on interactive mind maps in real-time.</p>
+                <a th:href="@{/boards}" class="btn btn-primary">View My Boards</a>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+

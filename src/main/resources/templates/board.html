@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${board != null ? board.title : 'Board'} + ' - Collaborative MindMap'">Board - Collaborative MindMap</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script src="https://unpkg.com/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+</head>
+<body>
+    <div class="board-container">
+        <header class="board-header">
+            <div class="board-info">
+                <a th:href="@{/boards}" class="back-link">← Back to Boards</a>
+                <h1 th:text="${board != null ? board.title : 'Loading...'}">Board Title</h1>
+            </div>
+            <div class="board-actions">
+                <button id="addNodeBtn" class="btn btn-primary">Add Node</button>
+                <button id="shareBtn" class="btn btn-secondary">Share</button>
+                <a th:href="@{/logout}" class="btn btn-secondary">Logout</a>
+            </div>
+        </header>
+        
+        <div class="board-main">
+            <div class="toolbar">
+                <div class="tool-group">
+                    <label>Node Color:</label>
+                    <input type="color" id="nodeColor" value="#3498db">
+                </div>
+                <div class="tool-group">
+                    <label>Node Shape:</label>
+                    <select id="nodeShape">
+                        <option value="ellipse">Ellipse</option>
+                        <option value="rectangle">Rectangle</option>
+                        <option value="roundrectangle">Rounded Rectangle</option>
+                        <option value="triangle">Triangle</option>
+                        <option value="diamond">Diamond</option>
+                    </select>
+                </div>
+                <div class="tool-group">
+                    <button id="deleteSelectedBtn" class="btn btn-danger">Delete Selected</button>
+                </div>
+            </div>
+            
+            <div id="cy" class="cytoscape-container"></div>
+        </div>
+    </div>
+    
+    <!-- Add Node Modal -->
+    <div id="addNodeModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Add Node</h3>
+            <form id="addNodeForm">
+                <div class="form-group">
+                    <label for="nodeLabel">Label</label>
+                    <input type="text" id="nodeLabel" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Add</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Share Board Modal -->
+    <div id="shareModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Share Board</h3>
+            <form id="shareForm">
+                <div class="form-group">
+                    <label for="shareUsername">Username</label>
+                    <input type="text" id="shareUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="sharePermission">Permission</label>
+                    <select id="sharePermission">
+                        <option value="READ">Read Only</option>
+                        <option value="WRITE">Write</option>
+                        <option value="ADMIN">Admin</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Share</button>
+            </form>
+        </div>
+    </div>
+    
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const boardId = /*[[${board != null ? board.id : ''}]]*/ '';
+        const csrfToken = /*[[${_csrf.token}]]*/ '';
+        const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
+        /*]]>*/
+    </script>
+    <script th:src="@{/js/board.js}"></script>
+</body>
+</html>
+

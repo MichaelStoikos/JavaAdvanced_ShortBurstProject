@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: collaborative-mindmap
+  
+  # MongoDB Configuration
+  data:
+    mongodb:
+      # LOCAL MongoDB (comment out if using Atlas):
+      # uri: mongodb://localhost:27017/mindmap
+      
+      # MONGODB ATLAS (cloud) - Replace with your connection string:
+      # Get this from: Atlas Dashboard > Connect > Connect your application
+      uri: mongodb+srv://heusdens:heusdens@fullproject3heusdensinc.wydmojn.mongodb.net/mindmap?retryWrites=true&w=majority&appName=FullProject3Heusdensinc
+      
+      # IMPORTANT: Replace:
+      # - YOUR_USERNAME with your MongoDB Atlas username
+      # - YOUR_PASSWORD with your MongoDB Atlas password
+      # - YOUR_CLUSTER with your cluster address (e.g., cluster0.abc123)
+  
+  # Thymeleaf Configuration
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+  
+  # GraphQL Configuration
+  graphql:
+    path: /graphql
+    graphiql:
+      enabled: true
+      path: /graphiql
+    websocket:
+      path: /graphql-ws
+    schema:
+      printer:
+        enabled: true
+
+# Server Configuration
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.mindmap: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.graphql: DEBUG
+
