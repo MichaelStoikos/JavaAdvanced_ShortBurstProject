@@ -39,7 +39,21 @@
                     </select>
                 </div>
                 <div class="tool-group">
+                    <button id="connectModeBtn" class="btn btn-secondary" title="Click to enable connect mode, then click two nodes to connect them">🔗 Connect Mode: OFF</button>
+                </div>
+                <div class="tool-group">
+                    <label>Zoom:</label>
+                    <button id="zoomOutBtn" class="btn btn-secondary" title="Zoom Out">−</button>
+                    <span id="zoomLevel" style="display: inline-block; width: 60px; text-align: center; font-weight: bold;">100%</span>
+                    <button id="zoomInBtn" class="btn btn-secondary" title="Zoom In">+</button>
+                    <button id="zoomFitBtn" class="btn btn-secondary" title="Fit to Screen">⊡</button>
+                    <button id="zoomResetBtn" class="btn btn-secondary" title="Reset Zoom">⟲</button>
+                </div>
+                <div class="tool-group">
                     <button id="deleteSelectedBtn" class="btn btn-danger">Delete Selected</button>
+                </div>
+                <div class="tool-group" style="margin-left: auto; font-size: 12px; color: #666;">
+                    <span>💡 <strong>Tips:</strong> Double-click to edit | Drag to move | Right-click node → click another to connect</span>
                 </div>
             </div>
             

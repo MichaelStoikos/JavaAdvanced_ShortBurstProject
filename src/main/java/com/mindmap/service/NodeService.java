@@ -2,6 +2,8 @@ package com.mindmap.service;
 
 import com.mindmap.graphql.input.CreateNodeInput;
 import com.mindmap.graphql.input.UpdateNodeInput;
+import com.mindmap.graphql.subscription.ChangeType;
+import com.mindmap.graphql.subscription.NodeChange;
 import com.mindmap.model.Node;
 import com.mindmap.model.User;
 import com.mindmap.repository.NodeRepository;
@@ -17,6 +19,7 @@ public class NodeService {
 
     private final NodeRepository nodeRepository;
     private final EdgeService edgeService;
+    private final SubscriptionService subscriptionService;
 
     public List<Node> getNodesByBoardId(String boardId) {
         return nodeRepository.findByBoardId(boardId);
@@ -40,7 +43,17 @@ public class NodeService {
                 .createdBy(createdBy)
                 .build();
         
-        return nodeRepository.save(node);
+        node = nodeRepository.save(node);
+        
+        // Publish node creation event
+        NodeChange change = NodeChange.builder()
+                .node(node)
+                .nodeId(node.getId())
+                .changeType(ChangeType.CREATED)
+                .build();
+        subscriptionService.publishNodeChange(input.getBoardId(), change);
+        
+        return node;
     }
 
     public Node updateNode(String id, UpdateNodeInput input) {
@@ -68,17 +81,37 @@ public class NodeService {
             node.setData(input.getData());
         }
         
-        return nodeRepository.save(node);
+        node = nodeRepository.save(node);
+        
+        // Publish node update event
+        NodeChange change = NodeChange.builder()
+                .node(node)
+                .nodeId(node.getId())
+                .changeType(ChangeType.UPDATED)
+                .build();
+        subscriptionService.publishNodeChange(node.getBoardId(), change);
+        
+        return node;
     }
 
     @Transactional
     public Boolean deleteNode(String id) {
         Node node = getNode(id);
+        String boardId = node.getBoardId();
         
         // Delete all edges connected to this node
         edgeService.deleteEdgesByNode(id);
         
         nodeRepository.delete(node);
+        
+        // Publish node deletion event
+        NodeChange change = NodeChange.builder()
+                .node(null)
+                .nodeId(id)
+                .changeType(ChangeType.DELETED)
+                .build();
+        subscriptionService.publishNodeChange(boardId, change);
+        
         return true;
     }
 
