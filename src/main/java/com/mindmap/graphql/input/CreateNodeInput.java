@@ -11,6 +11,11 @@ public class CreateNodeInput {
     private String color;
     private String shape;
     private Integer size;
+    private Integer width;
+    private Integer height;
+    private Integer fontSize;
+    private Boolean bold;
+    private Boolean italic;
     private String data;
 }
 

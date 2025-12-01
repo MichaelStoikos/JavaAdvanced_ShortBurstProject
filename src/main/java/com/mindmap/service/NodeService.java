@@ -39,6 +39,11 @@ public class NodeService {
                 .color(input.getColor())
                 .shape(input.getShape())
                 .size(input.getSize())
+                .width(input.getWidth())
+                .height(input.getHeight())
+                .fontSize(input.getFontSize())
+                .bold(input.getBold())
+                .italic(input.getItalic())
                 .data(input.getData())
                 .createdBy(createdBy)
                 .build();
@@ -76,6 +81,21 @@ public class NodeService {
         }
         if (input.getSize() != null) {
             node.setSize(input.getSize());
+        }
+        if (input.getWidth() != null) {
+            node.setWidth(input.getWidth());
+        }
+        if (input.getHeight() != null) {
+            node.setHeight(input.getHeight());
+        }
+        if (input.getFontSize() != null) {
+            node.setFontSize(input.getFontSize());
+        }
+        if (input.getBold() != null) {
+            node.setBold(input.getBold());
+        }
+        if (input.getItalic() != null) {
+            node.setItalic(input.getItalic());
         }
         if (input.getData() != null) {
             node.setData(input.getData());

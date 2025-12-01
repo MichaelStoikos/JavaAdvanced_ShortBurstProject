@@ -47,17 +47,17 @@ public class SubscriptionService {
 
     private Sinks.Many<BoardUpdate> getOrCreateBoardSink(String boardId) {
         return boardUpdateSinks.computeIfAbsent(boardId, 
-            k -> Sinks.many().multicast().onBackpressureBuffer());
+            k -> Sinks.many().multicast().directBestEffort());
     }
 
     private Sinks.Many<NodeChange> getOrCreateNodeSink(String boardId) {
         return nodeChangeSinks.computeIfAbsent(boardId, 
-            k -> Sinks.many().multicast().onBackpressureBuffer());
+            k -> Sinks.many().multicast().directBestEffort());
     }
 
     private Sinks.Many<EdgeChange> getOrCreateEdgeSink(String boardId) {
         return edgeChangeSinks.computeIfAbsent(boardId, 
-            k -> Sinks.many().multicast().onBackpressureBuffer());
+            k -> Sinks.many().multicast().directBestEffort());
     }
 }
 

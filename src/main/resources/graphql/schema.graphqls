@@ -81,6 +81,11 @@ type Node {
     color: String
     shape: String
     size: Int
+    width: Int
+    height: Int
+    fontSize: Int
+    bold: Boolean
+    italic: Boolean
     data: String
     createdBy: User!
     createdAt: String!
@@ -159,6 +164,11 @@ input CreateNodeInput {
     color: String
     shape: String
     size: Int
+    width: Int
+    height: Int
+    fontSize: Int
+    bold: Boolean
+    italic: Boolean
     data: String
 }
 
@@ -169,6 +179,11 @@ input UpdateNodeInput {
     color: String
     shape: String
     size: Int
+    width: Int
+    height: Int
+    fontSize: Int
+    bold: Boolean
+    italic: Boolean
     data: String
 }
 

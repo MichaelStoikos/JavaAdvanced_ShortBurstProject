@@ -39,6 +39,14 @@
                     </select>
                 </div>
                 <div class="tool-group">
+                    <label>Font Size:</label>
+                    <input type="number" id="nodeFontSize" value="14" min="8" max="72" step="2" style="width: 50px;">
+                </div>
+                <div class="tool-group">
+                    <button id="nodeBoldBtn" class="btn btn-secondary" title="Bold" style="font-weight: bold; width: 40px;">B</button>
+                    <button id="nodeItalicBtn" class="btn btn-secondary" title="Italic" style="font-style: italic; width: 40px;">I</button>
+                </div>
+                <div class="tool-group">
                     <button id="connectModeBtn" class="btn btn-secondary" title="Click to enable connect mode, then click two nodes to connect them">🔗 Connect Mode: OFF</button>
                 </div>
                 <div class="tool-group">
@@ -106,6 +114,7 @@
         const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
         /*]]>*/
     </script>
+    <script th:src="@{/js/node-resize.js}"></script>
     <script th:src="@{/js/board.js}"></script>
 </body>
 </html>

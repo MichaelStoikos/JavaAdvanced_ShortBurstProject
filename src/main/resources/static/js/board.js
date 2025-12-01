@@ -22,46 +22,53 @@ let ws = null;
 let subscriptionId = 0;
 const subscriptions = new Map();
 
-// Track locally created items to avoid duplicate adds from subscriptions
+// Track locally created/updated items to avoid duplicate adds from subscriptions
 const locallyCreatedNodes = new Set();
 const locallyCreatedEdges = new Set();
+const locallyUpdatedNodes = new Set();
+const locallyUpdatedEdges = new Set();
 
 function connectWebSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/graphql-ws`;
     
+    console.log('Connecting to WebSocket:', wsUrl);
     ws = new WebSocket(wsUrl, 'graphql-transport-ws');
     
     ws.onopen = () => {
-        console.log('WebSocket connected');
+        console.log('✅ WebSocket connected successfully');
         // Send connection init
         ws.send(JSON.stringify({ type: 'connection_init' }));
     };
     
     ws.onmessage = (event) => {
         const message = JSON.parse(event.data);
+        console.log('📨 WebSocket message received:', message.type, message);
         
         if (message.type === 'connection_ack') {
-            console.log('WebSocket connection acknowledged');
+            console.log('✅ WebSocket connection acknowledged');
             // Subscribe to node and edge changes
             subscribeToNodeChanges();
             subscribeToEdgeChanges();
         } else if (message.type === 'next' && message.id) {
+            console.log('📥 Subscription data received for ID:', message.id);
             const handler = subscriptions.get(message.id);
             if (handler) {
                 handler(message.payload.data);
+            } else {
+                console.warn('⚠️ No handler found for subscription ID:', message.id);
             }
         } else if (message.type === 'error') {
-            console.error('WebSocket error:', message.payload);
+            console.error('❌ WebSocket error:', message.payload);
         }
     };
     
     ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error('❌ WebSocket connection error:', error);
     };
     
-    ws.onclose = () => {
-        console.log('WebSocket disconnected, reconnecting in 3s...');
+    ws.onclose = (event) => {
+        console.log('🔌 WebSocket disconnected (code:', event.code, '), reconnecting in 3s...');
         setTimeout(connectWebSocket, 3000);
     };
 }
@@ -94,6 +101,11 @@ function subscribeToNodeChanges() {
                     color
                     shape
                     size
+                    width
+                    height
+                    fontSize
+                    bold
+                    italic
                 }
                 nodeId
                 changeType
@@ -121,20 +133,49 @@ function subscribeToNodeChanges() {
                         label: change.node.label,
                         color: change.node.color || '#3498db',
                         shape: change.node.shape || 'ellipse',
-                        size: change.node.size || 50
+                        size: change.node.size || 50,
+                        width: change.node.width || 80,
+                        height: change.node.height || 50,
+                        fontSize: change.node.fontSize || 14,
+                        bold: change.node.bold || false,
+                        italic: change.node.italic || false
                     },
                     position: { x: change.node.x, y: change.node.y }
                 });
             }
         } else if (change.changeType === 'UPDATED' && change.node) {
+            // Skip if we just updated this node locally (within last 500ms)
+            if (locallyUpdatedNodes.has(change.node.id)) {
+                console.log('⏭️ Skipping own update for node:', change.node.id);
+                locallyUpdatedNodes.delete(change.node.id);
+                return;
+            }
+            
             // Update existing node
             const node = cy.getElementById(change.node.id);
             if (node.length) {
-                node.data('label', change.node.label);
-                node.data('color', change.node.color);
-                node.data('shape', change.node.shape);
-                node.data('size', change.node.size);
+                console.log('🔄 Updating node from subscription:', change.node);
+                
+                // Update all data at once
+                node.data({
+                    label: change.node.label,
+                    color: change.node.color,
+                    shape: change.node.shape,
+                    size: change.node.size,
+                    width: change.node.width,
+                    height: change.node.height,
+                    fontSize: change.node.fontSize,
+                    bold: change.node.bold,
+                    italic: change.node.italic
+                });
+                
+                // Update position
                 node.position({ x: change.node.x, y: change.node.y });
+                
+                // Force complete style refresh by removing and re-adding style
+                node.removeStyle();
+                
+                console.log('✅ Node updated via subscription:', change.node.id);
             }
         } else if (change.changeType === 'DELETED') {
             // Remove deleted node
@@ -188,8 +229,15 @@ function subscribeToEdgeChanges() {
             // Update existing edge
             const edge = cy.getElementById(change.edge.id);
             if (edge.length) {
-                edge.data('label', change.edge.label);
-                edge.data('color', change.edge.color);
+                cy.batch(() => {
+                    edge.data('label', change.edge.label);
+                    edge.data('color', change.edge.color);
+                });
+                
+                // Force style recalculation
+                edge.style({});
+                
+                console.log('Edge updated via subscription:', change.edge.id);
             }
         } else if (change.changeType === 'DELETED') {
             // Remove deleted edge
@@ -213,11 +261,13 @@ function initCytoscape() {
                     'background-color': 'data(color)',
                     'label': 'data(label)',
                     'shape': 'data(shape)',
-                    'width': 'data(size)',
-                    'height': 'data(size)',
+                    'width': 'data(width)',
+                    'height': 'data(height)',
                     'text-valign': 'center',
                     'text-halign': 'center',
-                    'font-size': '14px',
+                    'font-size': function(ele) { return (ele.data('fontSize') || 14) + 'px'; },
+                    'font-weight': function(ele) { return ele.data('bold') ? 'bold' : 'normal'; },
+                    'font-style': function(ele) { return ele.data('italic') ? 'italic' : 'normal'; },
                     'color': '#fff',
                     'text-outline-width': 2,
                     'text-outline-color': 'data(color)'
@@ -296,6 +346,17 @@ function initCytoscape() {
         updateNode(node.id(), { x: position.x, y: position.y });
     });
     
+    // Update toolbar when node is selected
+    cy.on('select', 'node', function(evt) {
+        const node = evt.target;
+        updateToolbarFromNode(node);
+    });
+    
+    // Clear toolbar when node is deselected
+    cy.on('unselect', 'node', function() {
+        resetToolbar();
+    });
+    
     // Context menu for creating edges (right-click method)
     cy.on('cxttap', 'node', function(evt) {
         const sourceNode = evt.target;
@@ -354,6 +415,183 @@ function initCytoscape() {
     });
 }
 
+// Toolbar update functions
+function updateToolbarFromNode(node) {
+    const color = node.data('color') || '#3498db';
+    const shape = node.data('shape') || 'ellipse';
+    const fontSize = node.data('fontSize') || 14;
+    const bold = node.data('bold') || false;
+    const italic = node.data('italic') || false;
+    
+    document.getElementById('nodeColor').value = color;
+    document.getElementById('nodeShape').value = shape;
+    document.getElementById('nodeFontSize').value = fontSize;
+    
+    // Update bold/italic button states
+    const boldBtn = document.getElementById('nodeBoldBtn');
+    const italicBtn = document.getElementById('nodeItalicBtn');
+    
+    if (bold) {
+        boldBtn.classList.remove('btn-secondary');
+        boldBtn.classList.add('btn-primary');
+    } else {
+        boldBtn.classList.remove('btn-primary');
+        boldBtn.classList.add('btn-secondary');
+    }
+    
+    if (italic) {
+        italicBtn.classList.remove('btn-secondary');
+        italicBtn.classList.add('btn-primary');
+    } else {
+        italicBtn.classList.remove('btn-primary');
+        italicBtn.classList.add('btn-secondary');
+    }
+    
+    // Enable toolbar change listeners
+    enableToolbarListeners();
+}
+
+function resetToolbar() {
+    document.getElementById('nodeColor').value = '#3498db';
+    document.getElementById('nodeShape').value = 'ellipse';
+    document.getElementById('nodeFontSize').value = 14;
+    
+    const boldBtn = document.getElementById('nodeBoldBtn');
+    const italicBtn = document.getElementById('nodeItalicBtn');
+    boldBtn.classList.remove('btn-primary');
+    boldBtn.classList.add('btn-secondary');
+    italicBtn.classList.remove('btn-primary');
+    italicBtn.classList.add('btn-secondary');
+    
+    // Disable toolbar change listeners
+    disableToolbarListeners();
+}
+
+let toolbarListenersEnabled = false;
+
+function enableToolbarListeners() {
+    if (toolbarListenersEnabled) return;
+    toolbarListenersEnabled = true;
+    
+    document.getElementById('nodeColor').addEventListener('input', onToolbarColorChange);
+    document.getElementById('nodeShape').addEventListener('change', onToolbarShapeChange);
+    document.getElementById('nodeFontSize').addEventListener('input', onToolbarFontSizeChange);
+    document.getElementById('nodeBoldBtn').addEventListener('click', onToolbarBoldToggle);
+    document.getElementById('nodeItalicBtn').addEventListener('click', onToolbarItalicToggle);
+}
+
+function disableToolbarListeners() {
+    toolbarListenersEnabled = false;
+    
+    document.getElementById('nodeColor').removeEventListener('input', onToolbarColorChange);
+    document.getElementById('nodeShape').removeEventListener('change', onToolbarShapeChange);
+    document.getElementById('nodeFontSize').removeEventListener('input', onToolbarFontSizeChange);
+    document.getElementById('nodeBoldBtn').removeEventListener('click', onToolbarBoldToggle);
+    document.getElementById('nodeItalicBtn').removeEventListener('click', onToolbarItalicToggle);
+}
+
+function onToolbarColorChange(e) {
+    if (!toolbarListenersEnabled) return;
+    
+    const selectedNodes = cy.$('node:selected');
+    if (selectedNodes.length === 1) {
+        const node = selectedNodes[0];
+        const newColor = e.target.value;
+        
+        // Update locally
+        node.data('color', newColor);
+        
+        // Update in backend
+        updateNode(node.id(), { color: newColor });
+    }
+}
+
+function onToolbarShapeChange(e) {
+    if (!toolbarListenersEnabled) return;
+    
+    const selectedNodes = cy.$('node:selected');
+    if (selectedNodes.length === 1) {
+        const node = selectedNodes[0];
+        const newShape = e.target.value;
+        
+        // Update locally
+        node.data('shape', newShape);
+        
+        // Update in backend
+        updateNode(node.id(), { shape: newShape });
+    }
+}
+
+function onToolbarFontSizeChange(e) {
+    if (!toolbarListenersEnabled) return;
+    
+    const selectedNodes = cy.$('node:selected');
+    if (selectedNodes.length === 1) {
+        const node = selectedNodes[0];
+        const newFontSize = parseInt(e.target.value) || 14;
+        
+        // Update locally
+        node.data('fontSize', newFontSize);
+        
+        // Update in backend
+        updateNode(node.id(), { fontSize: newFontSize });
+    }
+}
+
+function onToolbarBoldToggle(e) {
+    if (!toolbarListenersEnabled) return;
+    
+    const selectedNodes = cy.$('node:selected');
+    if (selectedNodes.length === 1) {
+        const node = selectedNodes[0];
+        const currentBold = node.data('bold') || false;
+        const newBold = !currentBold;
+        
+        // Update locally
+        node.data('bold', newBold);
+        
+        // Update button state
+        const btn = e.currentTarget;
+        if (newBold) {
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('btn-primary');
+        } else {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-secondary');
+        }
+        
+        // Update in backend
+        updateNode(node.id(), { bold: newBold });
+    }
+}
+
+function onToolbarItalicToggle(e) {
+    if (!toolbarListenersEnabled) return;
+    
+    const selectedNodes = cy.$('node:selected');
+    if (selectedNodes.length === 1) {
+        const node = selectedNodes[0];
+        const currentItalic = node.data('italic') || false;
+        const newItalic = !currentItalic;
+        
+        // Update locally
+        node.data('italic', newItalic);
+        
+        // Update button state
+        const btn = e.currentTarget;
+        if (newItalic) {
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('btn-primary');
+        } else {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-secondary');
+        }
+        
+        // Update in backend
+        updateNode(node.id(), { italic: newItalic });
+    }
+}
+
 // Zoom control functions
 function updateZoomDisplay() {
     const zoom = cy.zoom();
@@ -400,6 +638,11 @@ async function loadBoardData() {
                 color
                 shape
                 size
+                width
+                height
+                fontSize
+                bold
+                italic
             }
         }
     `;
@@ -431,7 +674,12 @@ async function loadBoardData() {
                     label: node.label,
                     color: node.color || '#3498db',
                     shape: node.shape || 'ellipse',
-                    size: node.size || 50
+                    size: node.size || 50,
+                    width: node.width || 80,
+                    height: node.height || 50,
+                    fontSize: node.fontSize || 14,
+                    bold: node.bold || false,
+                    italic: node.italic || false
                 },
                 position: { x: node.x, y: node.y }
             });
@@ -462,6 +710,8 @@ async function loadBoardData() {
 async function createNode(label) {
     const color = document.getElementById('nodeColor').value;
     const shape = document.getElementById('nodeShape').value;
+    const width = 80;  // Default width
+    const height = 50; // Default height
     
     const mutation = `
         mutation CreateNode($input: CreateNodeInput!) {
@@ -473,6 +723,11 @@ async function createNode(label) {
                 color
                 shape
                 size
+                width
+                height
+                fontSize
+                bold
+                italic
             }
         }
     `;
@@ -485,7 +740,12 @@ async function createNode(label) {
             y: cy.height() / 2,
             color,
             shape,
-            size: 50
+            size: 50,
+            width,
+            height,
+            fontSize: 14,
+            bold: false,
+            italic: false
         }
     };
     
@@ -506,7 +766,12 @@ async function createNode(label) {
                     label: node.label,
                     color: node.color,
                     shape: node.shape,
-                    size: node.size
+                    size: node.size,
+                    width: node.width || 80,
+                    height: node.height || 50,
+                    fontSize: node.fontSize || 14,
+                    bold: node.bold || false,
+                    italic: node.italic || false
                 },
                 position: { x: node.x, y: node.y }
             });
@@ -531,6 +796,11 @@ async function updateNode(nodeId, updates) {
                 color
                 shape
                 size
+                width
+                height
+                fontSize
+                bold
+                italic
             }
         }
     `;
@@ -541,11 +811,19 @@ async function updateNode(nodeId, updates) {
     };
     
     try {
+        // Mark as locally updated to ignore our own subscription event
+        locallyUpdatedNodes.add(nodeId);
+        
+        // Remove from set after 1 second to allow future updates
+        setTimeout(() => {
+            locallyUpdatedNodes.delete(nodeId);
+        }, 1000);
+        
         const data = await graphqlRequest(mutation, variables);
-        const node = cy.getElementById(nodeId);
-        if (data.updateNode.label) node.data('label', data.updateNode.label);
+        console.log('✅ Node update sent to server:', nodeId, updates);
     } catch (error) {
-        console.error('Error updating node:', error);
+        console.error('❌ Error updating node:', error);
+        locallyUpdatedNodes.delete(nodeId); // Remove on error
     }
 }
 
@@ -776,6 +1054,12 @@ document.addEventListener('keydown', (e) => {
 // Initialize
 if (boardId) {
     initCytoscape();
+    
+    // Initialize resize functionality
+    if (typeof initNodeResize === 'function') {
+        initNodeResize(cy);
+    }
+    
     loadBoardData().then(() => {
         // Update zoom display after loading
         updateZoomDisplay();

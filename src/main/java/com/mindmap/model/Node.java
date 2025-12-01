@@ -38,6 +38,16 @@ public class Node {
     
     private Integer size;
     
+    private Integer width;
+    
+    private Integer height;
+    
+    private Integer fontSize;
+    
+    private Boolean bold;
+    
+    private Boolean italic;
+    
     private String data;
     
     @DBRef
