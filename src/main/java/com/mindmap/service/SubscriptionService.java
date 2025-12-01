@@ -16,6 +16,7 @@ public class SubscriptionService {
     private final Map<String, Sinks.Many<BoardUpdate>> boardUpdateSinks = new ConcurrentHashMap<>();
     private final Map<String, Sinks.Many<NodeChange>> nodeChangeSinks = new ConcurrentHashMap<>();
     private final Map<String, Sinks.Many<EdgeChange>> edgeChangeSinks = new ConcurrentHashMap<>();
+    private final Map<String, Sinks.Many<CursorPosition>> cursorSinks = new ConcurrentHashMap<>();
 
     public Flux<BoardUpdate> subscribeToBoardUpdates(String boardId) {
         return getOrCreateBoardSink(boardId).asFlux();
@@ -27,6 +28,10 @@ public class SubscriptionService {
 
     public Flux<EdgeChange> subscribeToEdgeChanges(String boardId) {
         return getOrCreateEdgeSink(boardId).asFlux();
+    }
+
+    public Flux<CursorPosition> subscribeToCursorMovements(String boardId) {
+        return getOrCreateCursorSink(boardId).asFlux();
     }
 
     public void publishBoardUpdate(BoardUpdate update) {
@@ -45,6 +50,11 @@ public class SubscriptionService {
         sink.tryEmitNext(change);
     }
 
+    public void publishCursorPosition(String boardId, CursorPosition position) {
+        Sinks.Many<CursorPosition> sink = getOrCreateCursorSink(boardId);
+        sink.tryEmitNext(position);
+    }
+
     private Sinks.Many<BoardUpdate> getOrCreateBoardSink(String boardId) {
         return boardUpdateSinks.computeIfAbsent(boardId, 
             k -> Sinks.many().multicast().directBestEffort());
@@ -57,6 +67,11 @@ public class SubscriptionService {
 
     private Sinks.Many<EdgeChange> getOrCreateEdgeSink(String boardId) {
         return edgeChangeSinks.computeIfAbsent(boardId, 
+            k -> Sinks.many().multicast().directBestEffort());
+    }
+
+    private Sinks.Many<CursorPosition> getOrCreateCursorSink(String boardId) {
+        return cursorSinks.computeIfAbsent(boardId, 
             k -> Sinks.many().multicast().directBestEffort());
     }
 }

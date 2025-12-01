@@ -13,7 +13,9 @@
             <h1>Collaborative MindMap</h1>
             <nav>
                 <a th:href="@{/boards}">My Boards</a>
-                <a th:href="@{/logout}">Logout</a>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" style="background: none; border: none; color: #667eea; cursor: pointer; font: inherit; font-weight: 500;">Logout</button>
+                </form>
             </nav>
         </header>
         

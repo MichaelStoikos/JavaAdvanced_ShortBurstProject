@@ -5,7 +5,12 @@ A real-time collaborative mind mapping application built with Spring Boot, Graph
 ## 🚀 Features
 
 - **Real-time Collaboration**: Multiple users can work on the same board simultaneously
+- **Live Cursor Tracking**: See where your collaborators are on the board in real-time
 - **Interactive Mind Maps**: Create, edit, and connect nodes with an intuitive drag-and-drop interface
+- **Interactive Resize Handles**: Adobe XD-style resize handles for adjusting node dimensions
+- **Rich Text Formatting**: Font size, bold, and italic text styling
+- **Advanced Zoom Controls**: Precise zoom controls with keyboard shortcuts and reduced scroll sensitivity
+- **Connect Mode**: Easy-to-use mode for creating connections between nodes
 - **GraphQL API**: Efficient data querying and mutations
 - **WebSocket Subscriptions**: Live updates when other users make changes
 - **User Authentication**: Secure login and registration with Spring Security
@@ -43,33 +48,17 @@ Before running this application, make sure you have:
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone <https://github.com/MichaelStoikos/JavaAdvanced_ShortBurstProject.git>
 cd JavaAdvanced_ShortBurstProject
 ```
 
-### 2. Configure MongoDB
-
-**Option A: Local MongoDB**
-- Make sure MongoDB is running on `localhost:27017`
-- The application will automatically create a database named `mindmap`
-
-**Option B: MongoDB Atlas**
-- Edit `src/main/resources/application.yml`
-- Replace the MongoDB URI:
-```yaml
-spring:
-  data:
-    mongodb:
-      uri: mongodb+srv://username:password@cluster.mongodb.net/mindmap
-```
-
-### 3. Build the Project
+### 2. Build the Project
 
 ```bash
 mvn clean install
 ```
 
-### 4. Run the Application
+### 3. Run the Application
 
 ```bash
 mvn spring-boot:run
@@ -77,17 +66,20 @@ mvn spring-boot:run
 
 Or run the main class `CollaborativeMindMapApplication` from your IDE.
 
-### 5. Access the Application
+### 4. Access the Application
 
 - **Application**: http://localhost:8080
 - **GraphiQL**: http://localhost:8080/graphiql (GraphQL playground)
 - **GraphQL Endpoint**: http://localhost:8080/graphql
 - **WebSocket**: ws://localhost:8080/graphql-ws
 
-### 6. Demo Account
+### 5. Demo Account
 
 A demo account is automatically created on first run:
 - **Username**: `demo`
+- **Password**: `demo123`
+#### Second account for testing
+- **Username**: `Firefox`
 - **Password**: `demo123`
 
 ## 📖 Usage Guide
@@ -107,6 +99,8 @@ A demo account is automatically created on first run:
 - **Edit Node**: Double-click a node to edit its label
 - **Delete Node**: Select a node and click "Delete Selected"
 - **Change Color/Shape**: Use the toolbar controls before adding a node
+- **Change Text Format**: Change font-size, bold, italic 
+- **Connect Nodes Button**: Default way of connectivity is a bit weird so I added a button for it.
 
 ### Creating Connections (Edges)
 
@@ -178,24 +172,29 @@ subscription {
 ```
 src/main/
 ├── java/com/mindmap/
-│   ├── config/              # Configuration classes
+│   ├── config/              # Configuration classes (WebSocket, DataInitializer)
 │   ├── controller/          # Web and Auth controllers
 │   ├── graphql/
 │   │   ├── input/          # GraphQL input types
 │   │   ├── resolver/       # Query, Mutation, Subscription resolvers
-│   │   └── subscription/   # Subscription payload types
-│   ├── model/              # Domain models (User, Board, Node, Edge)
+│   │   └── subscription/   # Subscription payload types (NodeChange, EdgeChange, CursorPosition)
+│   ├── model/              # Domain models (User, Board, Node, Edge, Collaborator, Permission)
 │   ├── repository/         # MongoDB repositories
 │   ├── security/           # Security configuration and utilities
-│   └── service/            # Business logic services
+│   └── service/            # Business logic services (Board, Node, Edge, Subscription, User)
 └── resources/
     ├── graphql/
     │   └── schema.graphqls # GraphQL schema definition
     ├── static/
-    │   ├── css/           # Stylesheets
-    │   └── js/            # JavaScript files
-    ├── templates/         # Thymeleaf templates
-    └── application.yml    # Application configuration
+    │   ├── css/
+    │   │   └── style.css   # Main stylesheet
+    │   └── js/
+    │       ├── board.js    # Board view logic & GraphQL client
+    │       ├── boards.js   # Boards list logic
+    │       ├── cursor-tracking.js  # Real-time cursor tracking
+    │       └── node-resize.js      # Interactive node resizing
+    ├── templates/          # Thymeleaf templates (login, register, boards, board, index)
+    └── application.yml     # Application configuration
 ```
 
 ## 🔐 Security
@@ -208,20 +207,6 @@ src/main/
 
 ## 🐛 Troubleshooting
 
-### MongoDB Connection Issues
-
-If you see connection errors:
-1. Verify MongoDB is running: `mongosh` or check MongoDB Compass
-2. Check the connection string in `application.yml`
-3. Ensure firewall allows connections to port 27017
-
-### Lombok Not Working
-
-If you see compilation errors related to getters/setters:
-1. Install the Lombok extension in Cursor/VS Code
-2. Enable annotation processing in your IDE
-3. Rebuild the project: `mvn clean install`
-
 ### Port Already in Use
 
 If port 8080 is already in use:
@@ -233,14 +218,14 @@ server:
 
 ## 🚧 Future Enhancements
 
-- [ ] Real-time cursor tracking for collaborators
 - [ ] Board templates
 - [ ] Export boards as images or PDF
 - [ ] Version history and undo/redo
-- [ ] Advanced node styling options
 - [ ] Search and filter nodes
 - [ ] Mobile-responsive design improvements
 - [ ] Integration with external services (Google Drive, Dropbox)
+- [ ] Collaborative text editing in nodes
+- [ ] Comments and annotations
 
 ## 📄 License
 

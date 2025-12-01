@@ -1,6 +1,8 @@
 package com.mindmap.controller;
 
 import com.mindmap.model.Board;
+import com.mindmap.model.User;
+import com.mindmap.security.SecurityUtils;
 import com.mindmap.service.BoardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 public class WebController {
 
     private final BoardService boardService;
+    private final SecurityUtils securityUtils;
 
     @GetMapping("/")
     public String index() {
@@ -38,7 +41,10 @@ public class WebController {
     public String board(@PathVariable String id, Model model) {
         try {
             Board board = boardService.getBoard(id);
+            User currentUser = securityUtils.getCurrentUser();
+            
             model.addAttribute("board", board);
+            model.addAttribute("currentUser", currentUser);
             return "board";
         } catch (Exception e) {
             return "redirect:/boards";

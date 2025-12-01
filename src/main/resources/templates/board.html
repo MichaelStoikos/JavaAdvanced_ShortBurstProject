@@ -18,7 +18,9 @@
             <div class="board-actions">
                 <button id="addNodeBtn" class="btn btn-primary">Add Node</button>
                 <button id="shareBtn" class="btn btn-secondary">Share</button>
-                <a th:href="@{/logout}" class="btn btn-secondary">Logout</a>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-secondary">Logout</button>
+                </form>
             </div>
         </header>
         
@@ -112,9 +114,12 @@
         const boardId = /*[[${board != null ? board.id : ''}]]*/ '';
         const csrfToken = /*[[${_csrf.token}]]*/ '';
         const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
+        window.currentUserId = /*[[${currentUser != null ? currentUser.id : ''}]]*/ '';
+        window.currentUsername = /*[[${currentUser != null ? currentUser.username : ''}]]*/ '';
         /*]]>*/
     </script>
     <script th:src="@{/js/node-resize.js}"></script>
+    <script th:src="@{/js/cursor-tracking.js}"></script>
     <script th:src="@{/js/board.js}"></script>
 </body>
 </html>

@@ -50,6 +50,11 @@ function connectWebSocket() {
             // Subscribe to node and edge changes
             subscribeToNodeChanges();
             subscribeToEdgeChanges();
+            
+            // Subscribe to cursor movements
+            if (typeof subscribeToCursorMovements === 'function') {
+                subscribeToCursorMovements(boardId);
+            }
         } else if (message.type === 'next' && message.id) {
             console.log('📥 Subscription data received for ID:', message.id);
             const handler = subscriptions.get(message.id);
@@ -333,8 +338,14 @@ function initCytoscape() {
     // Double click to edit node
     cy.on('dbltap', 'node', function(evt) {
         const node = evt.target;
-        const newLabel = prompt('Enter new label:', node.data('label'));
-        if (newLabel !== null && newLabel !== node.data('label')) {
+        const currentLabel = node.data('label');
+        const newLabel = prompt('Enter new label:', currentLabel);
+        
+        if (newLabel !== null && newLabel !== '' && newLabel !== currentLabel) {
+            // Update locally immediately for instant feedback
+            node.data('label', newLabel);
+            
+            // Send to server (will sync to other users)
             updateNode(node.id(), { label: newLabel });
         }
     });
@@ -1060,10 +1071,16 @@ if (boardId) {
         initNodeResize(cy);
     }
     
+    // Initialize cursor tracking
+    if (typeof initCursorTracking === 'function') {
+        initCursorTracking(cy, boardId);
+    }
+    
     loadBoardData().then(() => {
         // Update zoom display after loading
         updateZoomDisplay();
     });
+    
     // Connect WebSocket for real-time updates
     connectWebSocket();
 }

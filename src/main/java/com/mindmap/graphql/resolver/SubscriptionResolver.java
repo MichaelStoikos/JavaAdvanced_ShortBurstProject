@@ -1,6 +1,7 @@
 package com.mindmap.graphql.resolver;
 
 import com.mindmap.graphql.subscription.BoardUpdate;
+import com.mindmap.graphql.subscription.CursorPosition;
 import com.mindmap.graphql.subscription.EdgeChange;
 import com.mindmap.graphql.subscription.NodeChange;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,12 @@ public class SubscriptionResolver {
     @PreAuthorize("isAuthenticated()")
     public Flux<EdgeChange> edgeChanged(@Argument String boardId) {
         return subscriptionService.subscribeToEdgeChanges(boardId);
+    }
+
+    @SubscriptionMapping
+    @PreAuthorize("isAuthenticated()")
+    public Flux<CursorPosition> cursorMoved(@Argument String boardId) {
+        return subscriptionService.subscribeToCursorMovements(boardId);
     }
 }
 

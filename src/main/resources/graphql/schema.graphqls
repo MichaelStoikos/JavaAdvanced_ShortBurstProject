@@ -35,6 +35,9 @@ type Mutation {
     
     # Collaboration
     shareBoard(boardId: ID!, username: String!, permission: Permission!): Board!
+    
+    # Cursor tracking
+    updateCursor(boardId: ID!, x: Float!, y: Float!): Boolean!
 }
 
 type Subscription {
@@ -46,6 +49,9 @@ type Subscription {
     
     # Subscribe to edge changes
     edgeChanged(boardId: ID!): EdgeChange!
+    
+    # Subscribe to cursor movements
+    cursorMoved(boardId: ID!): CursorPosition!
 }
 
 # Types
@@ -122,6 +128,14 @@ type EdgeChange {
     edge: Edge
     edgeId: ID!
     changeType: ChangeType!
+}
+
+type CursorPosition {
+    userId: ID!
+    username: String!
+    x: Float!
+    y: Float!
+    timestamp: String!
 }
 
 # Enums
